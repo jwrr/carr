@@ -1,9 +1,9 @@
 /*
 MIT License
 
-Copyright (c) 2018 Copyright (c) 2018 
+Copyright (c) 2018 Copyright (c) 2018 JWRR.COM
 
-git clone https://github.com/jwrr/lued.git
+git clone https://github.com/jwrr/carr.git
 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -219,6 +219,9 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history, 
             carr_inserti(line, "ins_str(\"", 9);
             carr_inserti(line, "\\n", 2);
             carr_inserti(line, "\")",2);
+         } else {
+            carr_set_it(line,0);
+            carr_inserti(line, "alt_", 0);
          }
          if (use_repeat_oneline_cmd && oneline_cmd) {
             oneline_cmd = 0;
@@ -324,6 +327,8 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history, 
          safe_strncpy(local_hotkeys, hotkeys, hotkeys_size);
          if isEQ(*local_hotkeys, 'a') *local_hotkeys = ' ';
          if (is_inlist(local_hotkeys, line)) {
+            carr_set_it(line,0);
+            carr_inserti(line, "alt_", 0);
             if (use_repeat_oneline_cmd) {
                oneline_cmd = 0;
                if (!is_inlist(non_repeatables,line)) {
