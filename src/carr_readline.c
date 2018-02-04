@@ -155,6 +155,13 @@ void raw_on() {
    set_flag(0, ICANON | ECHO);
 }
 
+void sig_cont_handler() {
+   // printf("cont handler\n"); fflush(stdout); getchar();
+   raw_on();
+   return;
+}
+
+
 char getchar_raw(char *ch)
 {
 //  raw_on();
@@ -173,11 +180,13 @@ static void getchar_until(carr_t* dest, const char* match) {
    }
 }
 
+
 carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
    const char* hotkeys, const char* repeatables, const char* non_repeatables, int enable_alt_prefix)
 {
    static int oneline_cmd = 0;
    static int repeat_oneline_cmd = 0;
+   signal(SIGCONT, sig_cont_handler);
    //signal(SIGINT, SIG_IGN);
    //signal(SIGHUP, SIG_IGN);
    //signal(SIGTERM, SIG_IGN);
@@ -199,7 +208,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
 
    while (1) {
       getchar_raw(&c);
-      // printf("[%d,'%c']", c, c); fflush(stdout); if isEQ(c,'q') break; continue;
+//      printf("[%d,'%c'] ol_cmd=%d,repeat_olc=%d,esc_i=%d,mouse_i=%d", c, c, oneline_cmd,repeat_oneline_cmd,esc_i,mouse_i); fflush(stdout); getchar();  // if isEQ(c,'q') break; continue;
 
       int custom_esc_sequence = isEQ(esc_i,1) && !( isEQ(c,'[') || isEQ(c,'O') ); // OH=home, OF=end
       if (custom_esc_sequence) {
