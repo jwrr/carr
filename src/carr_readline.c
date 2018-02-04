@@ -173,7 +173,8 @@ static void getchar_until(carr_t* dest, const char* match) {
    }
 }
 
-carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history, const char* hotkeys, const char* repeatables, const char* non_repeatables)
+carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
+   const char* hotkeys, const char* repeatables, const char* non_repeatables, int enable_alt_prefix)
 {
    static int oneline_cmd = 0;
    static int repeat_oneline_cmd = 0;
@@ -215,14 +216,19 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history, 
       int screen_mode = oneline_cmd ? 0 : !isNULL(hotkeys) && isEQ(*hotkeys, 'a');
 
       if isEQ(c,'\n') {
-         if (screen_mode && (!use_repeat_oneline_cmd || !repeat_oneline_cmd)) {
+         if (screen_mode && !(use_repeat_oneline_cmd && repeat_oneline_cmd)) {
             carr_inserti(line, "ins_str(\"", 9);
             carr_inserti(line, "\\n", 2);
             carr_inserti(line, "\")",2);
-         } else {
+         } else if (enable_alt_prefix && carr_len(line)>0) {
+            char ch;
             carr_set_it(line,0);
-            carr_inserti(line, "alt_", 0);
+            carr_geti(line,&ch);
+            if (!isspace(ch) && !isdigit(ch)) {
+               carr_inserti(line, "alt_", 0);
+            }
          }
+
          if (use_repeat_oneline_cmd && oneline_cmd) {
             oneline_cmd = 0;
             if (!is_inlist(non_repeatables,line)) {
@@ -328,7 +334,9 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history, 
          if isEQ(*local_hotkeys, 'a') *local_hotkeys = ' ';
          if (is_inlist(local_hotkeys, line)) {
             carr_set_it(line,0);
-            carr_inserti(line, "alt_", 0);
+            if (enable_alt_prefix) {
+               carr_inserti(line, "alt_", 0);
+            }
             if (use_repeat_oneline_cmd) {
                oneline_cmd = 0;
                if (!is_inlist(non_repeatables,line)) {
@@ -365,6 +373,10 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history, 
       if (carr_len(history)) {
          carr_get(history, carr_len(history) - 1, &line);
       }
+//      if (enable_alt_prefix) {
+//         carr_set_it(line,0);
+//         carr_inserti(line, "alt_", 0);
+//      }
    } else {
       carr_t* tail = NULL;
       carr_get_last(history, &tail);

@@ -80,7 +80,7 @@ int carr_readline_lua(char** line, const char* prmt) {
    *line = NULL;
    if isNULL(cmd_hist) cmd_hist = carrp_new();
    carr_t* c_line = NULL;
-   c_line = carr_readline(prmt,1,cmd_hist,hotkeys,repeatables,non_repeatables);
+   c_line = carr_readline(prmt,1,cmd_hist,hotkeys,repeatables,non_repeatables,1);
    if isNULL(c_line) return 0;
    carr_readline_postprocessor(c_line,1);
 
@@ -98,7 +98,7 @@ carr_t* io_hist = NULL; // *******
 
 const carr_t* carr_readline_io(const char* prmt, const char* hot) {
    if isNULL(io_hist) io_hist = carrp_new();
-   const carr_t* c_str = carr_readline(prmt, 0, io_hist, hot, NULL, NULL);
+   const carr_t* c_str = carr_readline(prmt, 0, io_hist, hot, NULL, NULL,0);
    return c_str;
 }
 
@@ -122,7 +122,7 @@ carr_t* find_hist = NULL; // *******
 
 carr_t* carr_readline_find(const char* prmt) {
    if isNULL(find_hist) find_hist = carrp_new();
-   carr_t* c_str = carr_readline(prmt, 1, find_hist, NULL, NULL, NULL);
+   carr_t* c_str = carr_readline(prmt, 1, find_hist, NULL, NULL, NULL,0);
    return c_str;
 }
 
@@ -143,7 +143,7 @@ carr_t* replace_hist = NULL; // *******
 
 carr_t* carr_readline_replace(const char* prmt) {
    if isNULL(replace_hist) replace_hist = carrp_new();
-   carr_t* c_str = carr_readline(prmt, 1, replace_hist, NULL, NULL, NULL);
+   carr_t* c_str = carr_readline(prmt, 1, replace_hist, NULL, NULL, NULL,0);
    return c_str;
 }
 
@@ -192,14 +192,15 @@ static char *get_word(char* str) {
    int under_found = 0;
    int cnt = 0;
    while (*p) {
-      int is_long_cmd = (cnt > 4);
+      int is_long_cmd = 0; //(cnt > 4);
       int is_letter = is_inrange(*p, 'a', 'z') ||
          is_inrange(*p, 'A', 'Z');
       int is_digit = is_inrange(*p, '0', '9') && letter_found &&
          (is_long_cmd || under_found);
       // int is_underscore =  ('_' == *p) && letter_found;
       int is_underscore =  ('_' == *p);
-      under_found |= is_underscore;
+      // under_found |= is_underscore;
+      under_found = is_underscore;
       letter_found |= is_letter;
       int valid = is_letter || is_digit || is_underscore;
       if (!valid) return p;
@@ -319,10 +320,11 @@ int carr_readline_postprocessor(carr_t* c_str, uint32_t max_leading_spaces) {
    carr_set_it(c_str, 0);
    char ch;
    carr_geti(c_str,&ch);
-   int i = 0;
-   for (;i++ < max_leading_spaces && isEQ(ch,' '); carr_nexti(c_str)) {
-      carr_geti(c_str,&ch);
-   }
+   if isEQ(ch,' ') return 0; // don't process if leading space
+//   int i = 0;
+//   for (;i++ < max_leading_spaces && isEQ(ch,' '); carr_nexti(c_str)) {
+//      carr_geti(c_str,&ch);
+//   }
    if (!carr_validi(c_str)) return 0;
    if (just_a_number(c_str)) return 4; // goto_line
    special_char(c_str);
@@ -350,7 +352,7 @@ int carr_readline_postprocessor(carr_t* c_str, uint32_t max_leading_spaces) {
    if (is_squote || is_dquote || is_fslash) {
       carr_deli(c_str, 1);
       if (is_squote) {
-         carr_inserti(c_str, "_squote([=====[", 0);
+         carr_inserti(c_str, "_squote([=====[", 0);  // FIXMEs 
       } else if (is_dquote) {
          carr_inserti(c_str, "_dquote([=====[", 0);
       } else {
