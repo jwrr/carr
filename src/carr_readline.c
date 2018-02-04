@@ -178,11 +178,11 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
 {
    static int oneline_cmd = 0;
    static int repeat_oneline_cmd = 0;
-   signal(SIGINT, SIG_IGN);
-   signal(SIGHUP, SIG_IGN);
-   signal(SIGTERM, SIG_IGN);
-   signal(SIGTSTP, SIG_IGN);
-   signal(SIGQUIT, SIG_IGN);
+   //signal(SIGINT, SIG_IGN);
+   //signal(SIGHUP, SIG_IGN);
+   //signal(SIGTERM, SIG_IGN);
+   //signal(SIGTSTP, SIG_IGN);
+   //signal(SIGQUIT, SIG_IGN);
    carr_t* line = carrs_new();
    if isNULL(line) return NULL;
    char c;
