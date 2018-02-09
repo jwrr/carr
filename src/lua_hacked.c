@@ -2,15 +2,10 @@
 ** $Id: lua.c,v 1.206.1.1 2013/04/12 18:48:47 roberto Exp $
 ** Lua stand-alone interpreter
 ** See Copyright Notice in lua.h
-
-** git clone https://github.com/lua/lua.git
-
 */
 
 /* This version of the lua interpreter was hacked for lued */
-
-
-#define LUA_USE_CARR_READLINE
+/* Lua is available at: git clone https://github.com/lua/lua.git */
 
 #include <signal.h>
 #include <stdio.h>
@@ -20,20 +15,20 @@
 #define lua_c
 
 #include "lua.h"
-#include "lualib.h"
+
 #include "lauxlib.h"
+#include "lualib.h"
 
 
 #if !defined(LUA_PROMPT)
-#define LUA_PROMPT		"lued> "
-#define LUA_PROMPT2		"lued>> "
+#define LUA_PROMPT		"> "
+#define LUA_PROMPT2		">> "
 #endif
 
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"lua"
 #endif
 
-#define LUA_MAXINPUT		51200
 #if !defined(LUA_MAXINPUT)
 #define LUA_MAXINPUT		512
 #endif
@@ -78,13 +73,6 @@
         if (lua_rawlen(L,idx) > 0)  /* non-empty line? */ \
           add_history(lua_tostring(L, idx));  /* add it to history */
 #define lua_freeline(L,b)	((void)L, free(b))
-
-#elif defined(LUA_USE_CARR_READLINE)
-#include "carr_readline.h"
-#define lua_readline_define(l)  carr_t* l = carrp_new();
-#define lua_readline(L,b,p)  ((void)L, ((b)=carr_readline(p,LUA_CMDLINE,NULL)) != NULL)
-#define lua_saveline(L,idx) { (void)L; (void)idx; }
-#define lua_freeline(L,b) { (void)L; (void)b; }
 
 #elif !defined(lua_readline)
 
@@ -270,23 +258,23 @@ static int incomplete (lua_State *L, int status) {
   return 0;  /* else... */
 }
 
-#include "carr_readline_lua.h"
 
-static int pushline(lua_State *L, int firstline) {
+static int pushline (lua_State *L, int firstline) {
+  char buffer[LUA_MAXINPUT];
+  char *b = buffer;
+  size_t l;
   const char *prmt = get_prompt(L, firstline);
-  char *b = NULL;
-  int readstatus = carr_readline_lua(&b,prmt);
-
+  int readstatus = lua_readline(L, b, prmt);
   lua_pop(L, 1);  /* remove result from 'get_prompt' */
-  if (readstatus == 0 || *b == '\n' || *b == '\0') {
+  if (readstatus == 0)
     return 0;  /* no input */
-  }
-
+  l = strlen(b);
+  if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
+    b[l-1] = '\0';  /* remove it */
   if (firstline && b[0] == '=')  /* first line starts with `=' ? */
     lua_pushfstring(L, "return %s", b+1);  /* change it to `return' */
   else
     lua_pushstring(L, b);
-
   lua_freeline(L, b);
   return 1;
 }
@@ -314,8 +302,8 @@ static int loadline (lua_State *L) {
 }
 
 
-static int dotty (lua_State *L) {
-  int status = 0;
+static void dotty (lua_State *L) {
+  int status;
   const char *oldprogname = progname;
   progname = NULL;
   while ((status = loadline(L)) != -1) {
@@ -334,7 +322,6 @@ static int dotty (lua_State *L) {
   lua_settop(L, 0);  /* clear stack */
   luai_writeline();
   progname = oldprogname;
-  return status;
 }
 
 
@@ -453,16 +440,14 @@ static int handle_luainit (lua_State *L) {
 static int pmain (lua_State *L) {
   int argc = (int)lua_tointeger(L, 1);
   char **argv = (char **)lua_touserdata(L, 2);
-  int script = 0; // *** rlb
+  int script;
   int args[num_has];
   args[has_i] = args[has_v] = args[has_e] = args[has_E] = 0;
-  if (argc) {
-    if (argv[0] && argv[0][0]) progname = argv[0];
-    script = collectargs(argv, args);
-    if (script < 0) {  /* invalid arg? */
-      print_usage(argv[-script]);
-      return 0;
-    }
+  if (argv[0] && argv[0][0]) progname = argv[0];
+  script = collectargs(argv, args);
+  if (script < 0) {  /* invalid arg? */
+    print_usage(argv[-script]);
+    return 0;
   }
   if (args[has_v]) print_version();
   if (args[has_E]) {  /* option '-E'? */
@@ -479,29 +464,25 @@ static int pmain (lua_State *L) {
   /* execute arguments -e and -l */
   if (!runargs(L, argv, (script > 0) ? script : argc)) return 0;
   /* execute main script (if there is one) */
-
-  int status = 0;
   if (script && handle_script(L, argv, script) != LUA_OK) return 0;
   if (args[has_i])  /* -i option? */
-    status = dotty(L);
+    dotty(L);
   else if (script == 0 && !args[has_e] && !args[has_v]) {  /* no arguments? */
     if (lua_stdin_is_tty()) {
       print_version();
-      status = dotty(L);
+      dotty(L);
     }
     else dofile(L, NULL);  /* executes stdin as a file */
   }
-  lua_pushinteger(L, status);  /* signal no errors */
-
-  return 0; // status;
+  lua_pushboolean(L, 1);  /* signal no errors */
+  return 1;
 }
 
 
-int lua_interactive (lua_State* L, int argc, char **argv) { // rlb
-  int status, result, state_predefined;
-
-  state_predefined = (L != NULL); // rlb
-  if (!state_predefined) L = luaL_newstate();  /* create state */ // rlb
+int lua_interpreter (lua_State* L, int argc, char **argv) {
+  int status, result, standalone_interpreter;
+  standalone_interpreter = (L == NULL);
+  if (standalone_interpreter) L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
@@ -511,22 +492,15 @@ int lua_interactive (lua_State* L, int argc, char **argv) { // rlb
   lua_pushinteger(L, argc);  /* 1st argument */
   lua_pushlightuserdata(L, argv); /* 2nd argument */
   status = lua_pcall(L, 2, 1, 0);
-  result = lua_tointeger(L, -1);  /* get result */
-
+  result = lua_toboolean(L, -1);  /* get result */
   finalreport(L, status);
-
-  if (state_predefined) {
-    return result;
-  } else {
-    lua_close(L); // rlb
-    return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
-  }
+  if (standalone_interpreter) lua_close(L);
+  return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-
-int lua_main (int argc, char **argv) {
-   return lua_interactive(NULL, argc, argv);
+#ifndef LUA_EMBEDDED_INTERPRETER
+int main (int argc, char **argv) {
+   return lua_interpreter(NULL, argc, argv);
 }
-
-
+#endif
 

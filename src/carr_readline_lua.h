@@ -43,7 +43,7 @@ int lua_set_repeatables (lua_State *L);
 int lua_get_repeatables (lua_State *L);
 int lua_set_non_repeatables (lua_State *L);
 int lua_get_non_repeatables (lua_State *L);
-int lua_interactive (lua_State *L, int argc, char **argv);
+int lua_interpreter (lua_State *L, int argc, char **argv);
 
 #ifndef LUA_MAXINPUT
 #define LUA_MAXINPUT 51200

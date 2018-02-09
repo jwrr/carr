@@ -83,12 +83,20 @@ int carr_readline_lua(char** line, const char* prmt) {
    c_line = carr_readline(prmt,1,cmd_hist,hotkeys,repeatables,non_repeatables,1);
    if isNULL(c_line) return 0;
    carr_readline_postprocessor(c_line,1);
+   if isEQ(carr_len(c_line), 1) {
+      char firstchar;
+      carr_get(c_line,0,&firstchar);
+      if isEQ(firstchar, '\n') carr_set_len(c_line, 0);
+   }
 
    int l_size = carr_len(c_line) + 100;
    char* l = malloc(l_size * sizeof(char));
    if isNULL(l) return 0;
    safe_strncpy(l, c_line->arr, l_size);
    *line = l;
+   char firstchar = **line;
+   if isEQ(firstchar,'\0') return 0;
+   if isEQ(firstchar,'\n') return 0;
    return 1;
 }
 
@@ -190,7 +198,6 @@ static char *get_word(char* str) {
    char *p = str;
    int letter_found = 0;
    int under_found = 0;
-   int cnt = 0;
    while (*p) {
       int is_long_cmd = 0; //(cnt > 4);
       int is_letter = is_inrange(*p, 'a', 'z') ||

@@ -414,6 +414,17 @@ struct lua_Debug {
   struct CallInfo *i_ci;  /* active function */
 };
 
+/* LUED CUSTOMIZATIONS */
+#define LUA_EMBEDDED_INTERPRETER
+#define LUA_USE_CARR_READLINE
+#define LUA_MAXINPUT		51200
+#define lua_readline(L,b,p)  carr_readline_lua(&b,p)
+#define lua_saveline(L,idx)	{ (void)L; (void)idx; }
+#define lua_freeline(L,b)	{ (void)L; (void)b; }
+int carr_readline_lua(char** buffer, const char* prmt);
+int lua_interpreter(lua_State *L, int argc, char **argv);
+/* END LEUD CUSTOMIZATIONS */
+
 /* }====================================================================== */
 
 
