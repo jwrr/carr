@@ -358,6 +358,7 @@ static int handle_script (lua_State *L, char **argv, int n) {
 
 static int collectargs (char **argv, int *args) {
   int i;
+  if (argv[0] == NULL) return 0;
   for (i = 1; argv[i] != NULL; i++) {
     if (argv[i][0] != '-')  /* not an option? */
         return i;
