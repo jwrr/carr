@@ -240,7 +240,10 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
 
          if (use_repeat_oneline_cmd && oneline_cmd) {
             oneline_cmd = 0;
-            if (!is_inlist(non_repeatables,line)) {
+            if (!is_inlist(non_repeatables,line) && carr_len(line)>5) {
+               // len > 5 means longer than one char "alt_x"==5
+               // 1-char sequences are never repeatable because the
+               // user can just hit the key again.
                repeat_oneline_cmd = 1;
             }
          }
@@ -348,7 +351,8 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
             }
             if (use_repeat_oneline_cmd) {
                oneline_cmd = 0;
-               if (!is_inlist(non_repeatables,line)) {
+               if (!is_inlist(non_repeatables,line) && carr_len(line)>5) {
+                  // see comment above
                   repeat_oneline_cmd = 1;
                }
             }
