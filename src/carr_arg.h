@@ -1,7 +1,9 @@
-/* 
+/*
 MIT License
 
-Copyright (c) 2018 jwrr
+Copyright (c) 2018 JWRR.COM
+
+git clone https://github.com/jwrr/carr.git
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +37,7 @@ typedef struct carr_arg_struct {
 } carr_arg_t;
 
 const carr_t* carr_arg(int argc, char** argv, const char* options);
-const char* carr_arg_get(const char* option, size_t index); 
+const char* carr_arg_get(const char* option, size_t index);
 carr_t* carr_arg_free(carr_t* ptr);
 
 #endif

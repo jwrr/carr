@@ -1,10 +1,9 @@
 /*
 MIT License
 
-Copyright (c) 2018 Copyright (c) 2018 JWRR.COM
+Copyright (c) 2018 JWRR.COM
 
 git clone https://github.com/jwrr/carr.git
-
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
