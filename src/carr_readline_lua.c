@@ -102,19 +102,25 @@ int carr_readline_lua(char** line, const char* prmt) {
 
 // =========================================================
 
-carr_t* io_hist = NULL; // *******
+carr_t* all_hist = NULL;
 
-const carr_t* carr_readline_io(const char* prmt, const char* hot) {
-   if isNULL(io_hist) io_hist = carrp_new();
-   const carr_t* c_str = carr_readline(prmt, 0, io_hist, hot, NULL, NULL,0);
+const carr_t* carr_io_readline(uint32_t hist_id, const char* prmt, const char* hot) {
+   if isNULL(all_hist) all_hist = carrp_new();
+   carr_t* hist_p = NULL;
+   carr_get(all_hist, hist_id, &hist_p);
+   if isNULL(hist_p) {
+      hist_p = carrp_new();
+      carr_push(all_hist, &hist_p);
+   }
+   const carr_t* c_str = carr_readline(prmt, 0, hist_p, hot, NULL, NULL,0);
    return c_str;
 }
 
 int lua_io_read(lua_State *L) {
-   const char* prompt  = lua_gettop(L)>0 ? lua_tostring(L, 1) : NULL;
-   // const char* hist_id = lua_gettop(L)>1 ? lua_tostring(L, 2) : NULL;
+   const uint32_t hist_id = lua_gettop(L)>0 ? lua_tonumber(L, 1) : 1;
+   const char* prompt  = lua_gettop(L)>1 ? lua_tostring(L, 2) : NULL;
    const char* hot     = lua_gettop(L)>2 ? lua_tostring(L, 3) : NULL;
-   const carr_t* c_str = carr_readline_io(prompt, hot);
+   const carr_t* c_str = carr_io_readline(hist_id-1, prompt, hot);
    if (c_str) {
       lua_pushstring(L, c_str->arr);
    } else {
@@ -124,69 +130,6 @@ int lua_io_read(lua_State *L) {
    return 1;
 }
 
-// =========================================================
-
-carr_t* find_hist = NULL; // *******
-
-carr_t* carr_readline_find(const char* prmt) {
-   if isNULL(find_hist) find_hist = carrp_new();
-   carr_t* c_str = carr_readline(prmt, 1, find_hist, NULL, NULL, NULL,0);
-   return c_str;
-}
-
-int lua_find_read(lua_State *L) {
-   const char* prompt = lua_tostring(L, 1);
-   const carr_t* c_str = carr_readline_find(prompt);
-   if (c_str) {
-      lua_pushstring(L, c_str->arr);
-   } else {
-      lua_pushstring(L, "");
-   }
-   return 1;
-}
-
-// =========================================================
-
-carr_t* replace_hist = NULL; // *******
-
-carr_t* carr_readline_replace(const char* prmt) {
-   if isNULL(replace_hist) replace_hist = carrp_new();
-   carr_t* c_str = carr_readline(prmt, 1, replace_hist, NULL, NULL, NULL,0);
-   return c_str;
-}
-
-int lua_replace_read(lua_State *L) {
-   const char* prompt = lua_tostring(L, 1);
-   const carr_t* c_str = carr_readline_replace(prompt);
-   if (c_str) {
-      lua_pushstring(L, c_str->arr);
-   } else {
-      lua_pushstring(L, "");
-   }
-   return 1;
-}
-
-// =========================================================
-/*
-carr_t* open_files = NULL; // *******
-
-int carr_readline_open_files(const char* prmt) {
-   if isNULL(open_files) open_files = carrp_new();
-   carr_t* c_str = carr_readline(prmt, 0, open_files, NULL, NULL, NULL);
-   return c_str;
-}
-
-int lua_find_read(lua_State *L) {
-   const char* prompt = lua_tostring(L, 1);
-   const carr_t* c_str = carr_readline_find(prompt);
-   if (c_str) {
-      lua_pushstring(L, c_str->arr);
-   } else {
-      lua_pushstring(L, "");
-   }
-   return 1;
-}
-*/
 // =========================================================
 
 static int is_inrange(char ch, char lower, char upper) {
