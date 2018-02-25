@@ -65,6 +65,7 @@ static void cursor_left(carr_t* line, size_t n) {
 static void cursor_home(carr_t* line) {
    if isNULL(line) return;
    cursor_left(line, carr_i(line));
+   carr_set_it(line,0);
 }
 
 static void cursor_right(carr_t* line, size_t n) {
@@ -85,6 +86,21 @@ static void insert_char(carr_t* line, char c) {
    carr_inserti(line,&c,1);
    printf(ESC_ICH"%c",c);
    fflush(stdout);
+}
+
+static void insert_string(carr_t* line, char* str, uint32_t max_len) {
+   if isNULL(line) return;
+   for (int i=0; str[i]; i++) {
+      if (max_len > 0 && isEQ(i,max_len)) break;
+      insert_char(line, str[i]);
+   }
+}
+
+static void insert_prefix(carr_t* line, char* str, uint32_t strlen) {
+   cursor_home(line);
+   insert_string(line,"alt_",strlen);
+   // insert_char(line, c);
+   cursor_end(line);
 }
 
 static void delete_char(carr_t* line) {
@@ -161,7 +177,6 @@ void sig_cont_handler() {
    return;
 }
 
-
 char getchar_raw(char *ch)
 {
 //  raw_on();
@@ -186,7 +201,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
 {
    static int oneline_cmd = 0;
    static int repeat_oneline_cmd = 0;
-   signal(SIGCONT, sig_cont_handler);
+   signal(SIGCONT, sig_cont_handler); // needed for ctrl-z, fg
    //signal(SIGINT, SIG_IGN);
    //signal(SIGHUP, SIG_IGN);
    //signal(SIGTERM, SIG_IGN);
@@ -345,9 +360,8 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
          safe_strncpy(local_hotkeys, hotkeys, hotkeys_size);
          if isEQ(*local_hotkeys, 'a') *local_hotkeys = ' ';
          if (is_inlist(local_hotkeys, line)) {
-            carr_set_it(line,0);
             if (enable_alt_prefix) {
-               carr_inserti(line, "alt_", 0);
+               insert_prefix(line,"alt_",0);
             }
             if (use_repeat_oneline_cmd) {
                oneline_cmd = 0;
@@ -364,8 +378,8 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
          // if isEQ(c, 'K') {
          //   oneline_cmd = 1;
          // } else {
-            carr_inserti(line, "ctrl_", 5);
-            carr_inserti(line, &c, 1);
+            insert_string(line,"ctrl_",5);
+            insert_char(line, c);
             if (use_repeat_oneline_cmd && is_inlist(repeatables,line)) {
                repeat_oneline_cmd = 1;
             }
@@ -376,6 +390,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
          fflush(stdout);
       }
    } // while
+
    // raw_off(); // moved to main
    cursor_end(line);
    // signal(SIGINT, SIG_DFL);
