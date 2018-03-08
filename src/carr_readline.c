@@ -289,10 +289,22 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
             if (screen_mode) {carr_inserti(line, "esc_delete", 0); break; }
             delete_char(line);
          } else if (isEQS(esc, ESC_HOME) || isEQS(esc, ESC_HOME2) || isEQS(esc, ESC_HOME3) || isEQS(esc, ESC_HOME4)) {
-            if (screen_mode) {carr_inserti(line, "esc_home", 0); break; }
+            if (screen_mode) {
+              if isEQS(esc, ESC_HOME) {
+                 carr_inserti(line, "esc_shift_left", 0); break;
+              } else {
+                 carr_inserti(line, "esc_home", 0); break;
+              }
+            }
             cursor_home(line);
          } else if (isEQS(esc, ESC_END) || isEQS(esc, ESC_END2) || isEQS(esc, ESC_END3) || isEQS(esc, ESC_END4)) {
-            if (screen_mode) {carr_inserti(line, "esc_end", 0); break; }
+            if (screen_mode) {
+              if isEQS(esc, ESC_END) {
+                 carr_inserti(line, "esc_shift_right", 0); break;
+              } else {
+                 carr_inserti(line, "esc_end", 0); break;
+              }
+            }
             cursor_end(line);
          } else if (isEQS(esc, ESC_PAGEUP) || isEQS(esc, ESC_PAGEUP2)) {
             if (screen_mode) {carr_inserti(line, "esc_pageup", 0); break; }
