@@ -1,0 +1,5 @@
+cd _builds
+cmake ..
+make
+make install
+cd ..
