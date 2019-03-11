@@ -1,5 +1,10 @@
-cd _builds
-cmake ..
-make
-make install
-cd ..
+cmake -H. -B_builds
+cmake --build _builds
+cmake --build _builds --target install
+
+# mkdir _builds
+# cd _builds
+# cmake ..
+# make
+# make install
+# cd ..
