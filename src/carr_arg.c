@@ -47,7 +47,7 @@ const carr_t* carr_arg(int argc, char** argv, const char* options)
    char* token = strtok_r(options2, " ", &options2_p);
    size_t i = 0;
    while (token) {
-      printf("%d: '%s'\n", i, token);
+      printf("%ld: '%s'\n", i, token);
       token = strtok_r(options2_p, " ", &options2_p);
       i++;
    }
