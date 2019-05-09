@@ -1,0 +1,13 @@
+*.o
+a.out
+*.gcda
+*.gcno
+.*.sw?
+*.so
+*.log
+*_test
+*zip
+*gz
+*bz
+hide/
+/build*
