@@ -1,3 +1,5 @@
+mkdir build
+pushd build
 cmake ..
 make
 make install
@@ -5,4 +7,4 @@ cmake -DBUILD_TESTING=ON -DTEST_INSTALL=ON ..
 make
 cd test
 ctest
-cd ..
+popd
