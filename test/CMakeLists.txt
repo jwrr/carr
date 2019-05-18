@@ -19,3 +19,6 @@ add_test(NAME test1 COMMAND test1)
 
 add_executable(test2 test2.c)
 add_test(NAME test2 COMMAND test2)
+
+add_executable(carr_test carr_test.c ctest.c)
+add_test(NAME carr_test COMMAND carr_test)

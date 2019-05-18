@@ -174,7 +174,7 @@ void ctest_test_result(ctest_type* test)
 /// \param test Pointer to the test data structure
 /// \return void
 
-void ctest_total_result(ctest_type* test)
+int ctest_total_result(ctest_type* test)
 {
    if isNULL(test) return;
    if (test->test_pass_count || test->test_fail_count) {
@@ -193,6 +193,7 @@ void ctest_total_result(ctest_type* test)
       }
    }
    ctest_free(test);
+   return test->total_fail_count;
 }
 
 /// \brief Free the test data structure

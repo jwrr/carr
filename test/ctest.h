@@ -32,7 +32,7 @@ void ctest_eqs(ctest_type* test, const char* actual, const char* expect, const c
 void ctestfl_eqi(ctest_type* test, const int actual, const int expect, const char* description, char const* const file, int const ln);
 void ctestfl_eqs(ctest_type* test, const char* actual, const char* expect, const char* description, char const* const file, int const ln);
 void ctest_test_result(ctest_type* test);
-void ctest_total_result(ctest_type* test);
+int  ctest_total_result(ctest_type* test);
 void ctest_free(ctest_type* test);
 
 #define CTEST_UNIT(N) if (ctest_unit(t, N))
