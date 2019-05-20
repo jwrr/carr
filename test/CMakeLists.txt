@@ -12,13 +12,14 @@ else()
   link_directories(${CMAKE_BINARY_DIR}/src)
 endif()
 
+macro(add_tests)
+  set(TESTS "${ARGN}")
+  foreach(TEST IN LISTS TESTS)
+    add_executable(${TEST} ${TEST}.c)
+    add_test(NAME  ${TEST} COMMAND ${TEST})
+  endforeach()
+endmacro()
+
 link_libraries(carr)
+add_tests(test1 cstra_new carr_new)
 
-add_executable(test1 test1.c)
-add_test(NAME test1 COMMAND test1)
-
-add_executable(test2 test2.c)
-add_test(NAME test2 COMMAND test2)
-
-add_executable(carr_test carr_test.c ctest.c)
-add_test(NAME carr_test COMMAND carr_test)
