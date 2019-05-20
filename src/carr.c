@@ -48,7 +48,6 @@ carr_t* carr_new(uint32_t max_size, uint32_t elem_size)
    carr->elem_size = elem_size;
    carr->max_size = max_size;
    carr->arr = calloc(1, elem_size);
-   carr->next = NULL;
    return carr;
 }
 
