@@ -17,10 +17,8 @@ int main(int argc, char* argv[])
     /// \req  7: Verify ptr->it is set to 0;
     /// \req  8: Verify ptr->arr is set to valid pointer
     /// \req  9: Verify ptr->len is set to 0
-    /// \req 10: Verify ptr->
 
-
-//      carr_t* carr_new(uint32_t max_size, uint32_t elem_size);
+//  carr_t* carr_new(uint32_t max_size, uint32_t elem_size);
 
     carr_t* s1 = carr_new(100,1);
     // \req 1.1 cstra_new shall initialize max_size to the max_size argument.
