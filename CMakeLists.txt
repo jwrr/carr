@@ -1,3 +1,8 @@
+# cmake .. -DBUILD_TESTING=ON
+# make
+# cd test
+# ctest --output-on-failure
+
 cmake_minimum_required(VERSION 2.8)
 project(carr_prj)
 
