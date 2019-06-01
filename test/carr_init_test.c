@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv[])
 {
-    /// carr_new test
+    /// carr_init test
     /// \req  1: Verify elem_size==0 return NULL pointer
     /// \req  2: Verify max_size==0 returns valid pointer
     /// \req  3: Verify max_size>0 returns valid pointer
