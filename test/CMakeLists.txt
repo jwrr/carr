@@ -21,5 +21,10 @@ macro(add_tests)
 endmacro()
 
 link_libraries(carr)
-add_tests(test1 carr_new_test carr_init_test carr_dup_test)
+add_tests(test1 
+carr_new_test 
+carr_init_test 
+carr_dup_test 
+carr_copy_test 
+)
 
