@@ -2,9 +2,13 @@ mkdir build
 pushd build
 cmake ..
 make
-make install
-cmake -DBUILD_TESTING=ON -DTEST_INSTALL=ON ..
+
+#make install
+#cmake -DBUILD_TESTING=ON -DTEST_INSTALL=ON ..
+
+cmake -DBUILD_TESTING=ON  ..
+
 make
 cd test
-ctest
+ctest --output-on-failure
 popd
