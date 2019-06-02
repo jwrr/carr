@@ -27,5 +27,6 @@ carr_init_test
 carr_dup_test
 carr_copy_test
 carr_resize_test
+carr_resize_if_needed_test
 )
 
