@@ -28,6 +28,7 @@ SOFTWARE.
 #include "carr.h"
 #include "carr_esc.h"
 carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history, 
-   const char* hotkeys, const char* readables, const char* non_readables, int enable_alt_prefix);
+   const char* hotkeys, const char* readables, const char* non_readables,
+   int enable_alt_prefix, const char* test_str);
 void raw_on();
 void raw_off();

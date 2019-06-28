@@ -80,7 +80,7 @@ int carr_readline_lua(char** line, const char* prmt) {
    *line = NULL;
    if isNULL(cmd_hist) cmd_hist = carrp_new();
    carr_t* c_line = NULL;
-   c_line = carr_readline(prmt,1,cmd_hist,hotkeys,repeatables,non_repeatables,1);
+   c_line = carr_readline(prmt,1,cmd_hist,hotkeys,repeatables,non_repeatables,1,NULL);
    if isNULL(c_line) return 0;
    carr_readline_postprocessor(c_line,1);
    if isEQ(carr_len(c_line), 1) {
@@ -104,7 +104,8 @@ int carr_readline_lua(char** line, const char* prmt) {
 
 carr_t* all_hist = NULL;
 
-const carr_t* carr_io_readline(uint32_t hist_id, const char* prmt, const char* hot) {
+const carr_t* carr_io_readline(uint32_t hist_id, const char* prmt, 
+   const char* hot, const char* test_str) {
    if isNULL(all_hist) all_hist = carrp_new();
    carr_t* hist_p = NULL;
    carr_get(all_hist, hist_id, &hist_p);
@@ -112,15 +113,16 @@ const carr_t* carr_io_readline(uint32_t hist_id, const char* prmt, const char* h
       hist_p = carrp_new();
       carr_push(all_hist, &hist_p);
    }
-   const carr_t* c_str = carr_readline(prmt, 0, hist_p, hot, NULL, NULL,0);
+   const carr_t* c_str = carr_readline(prmt, 0, hist_p, hot, NULL, NULL,0, test_str);
    return c_str;
 }
 
 int lua_io_read(lua_State *L) {
    const uint32_t hist_id = lua_gettop(L)>0 ? lua_tonumber(L, 1) : 1;
-   const char* prompt  = lua_gettop(L)>1 ? lua_tostring(L, 2) : NULL;
-   const char* hot     = lua_gettop(L)>2 ? lua_tostring(L, 3) : NULL;
-   const carr_t* c_str = carr_io_readline(hist_id-1, prompt, hot);
+   const char* prompt   = lua_gettop(L)>1 ? lua_tostring(L, 2) : NULL;
+   const char* hot      = lua_gettop(L)>2 ? lua_tostring(L, 3) : NULL;
+   const char* test_str = lua_gettop(L)>3 ? lua_tostring(L, 4) : NULL;
+   const carr_t* c_str  = carr_io_readline(hist_id-1, prompt, hot, test_str);
    if (c_str) {
       lua_pushstring(L, c_str->arr);
    } else {

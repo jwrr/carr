@@ -196,8 +196,10 @@ static void getchar_until(carr_t* dest, const char* match) {
 
 
 carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
-   const char* hotkeys, const char* repeatables, const char* non_repeatables, int enable_alt_prefix)
+   const char* hotkeys, const char* repeatables, const char* non_repeatables,
+   int enable_alt_prefix, const char* test_str)
 {
+
    static int oneline_cmd = 0;
    static int repeat_oneline_cmd = 0;
    signal(SIGCONT, sig_cont_handler); // needed for ctrl-z, fg
@@ -218,193 +220,198 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
    size_t mouse_i = 0;
    carr_set_it(history, carr_len(history));
 
-   int use_repeat_oneline_cmd = !isNULL(hotkeys);
+   if (test_str && *test_str) { // ================
+      carr_inserti(line, test_str, 0);
+   } else {
+      int use_repeat_oneline_cmd = !isNULL(hotkeys);
 
-   while (1) {
-      getchar_raw(&c);
-//      printf("[%d,'%c'] ol_cmd=%d,repeat_olc=%d,esc_i=%d,mouse_i=%d", c, c, oneline_cmd,repeat_oneline_cmd,esc_i,mouse_i); fflush(stdout); getchar();  // if isEQ(c,'q') break; continue;
+      while (1) {
+         getchar_raw(&c);
+         //      printf("[%d,'%c'] ol_cmd=%d,repeat_olc=%d,esc_i=%d,mouse_i=%d", c, c, oneline_cmd,repeat_oneline_cmd,esc_i,mouse_i); fflush(stdout); getchar();  // if isEQ(c,'q') break; continue;
 
-      int custom_esc_sequence = isEQ(esc_i,1) && !( isEQ(c,'[') || isEQ(c,'O') ); // OH=home, OF=end
-      if (custom_esc_sequence) {
-         esc_i = 0;
-         esc[0] = '\0';
-         if (use_repeat_oneline_cmd) oneline_cmd = 1;
-      }
-
-      if isEQ(c,ESC)  {
-         esc_i = 0;
-         esc_append(esc, &esc_i, c);
-      }
-
-      int screen_mode = oneline_cmd ? 0 : !isNULL(hotkeys) && isEQ(*hotkeys, 'a');
-
-      if isEQ(c,'\n') {
-         if (screen_mode && !(use_repeat_oneline_cmd && repeat_oneline_cmd)) {
-            carr_inserti(line, "ins_str(\"", 9);
-            carr_inserti(line, "\\n", 2);
-            carr_inserti(line, "\")",2);
-         } else if (enable_alt_prefix && carr_len(line)>0) {
-            char ch;
-            carr_set_it(line,0);
-            carr_geti(line,&ch);
-            if (!isspace(ch) && !isdigit(ch)) {
-               carr_inserti(line, "alt_", 0);
-            }
-         }
-
-         if (use_repeat_oneline_cmd && oneline_cmd) {
-            oneline_cmd = 0;
-            if (!is_inlist(non_repeatables,line) && carr_len(line)>5) {
-               // len > 5 means longer than one char "alt_x"==5
-               // 1-char sequences are never repeatable because the
-               // user can just hit the key again.
-               repeat_oneline_cmd = 1;
-            }
-         }
-         break;
-      }
-
-      if (use_repeat_oneline_cmd) repeat_oneline_cmd = 0;
-
-      if (esc_i) {
-         esc_append(esc, &esc_i, c);
-         int in_esc = 0;
-         if isEQS(esc,ESC_UP) {
-            if (screen_mode) {carr_inserti(line, "esc_up", 0); break; }
-            history_prev(history, line);
-         } else if isEQS(esc, ESC_DOWN) {
-            if (screen_mode) {carr_inserti(line, "esc_down", 0); break; }
-            history_next(history, line);
-         } else if isEQS(esc, ESC_RIGHT) {
-            if (screen_mode) {carr_inserti(line, "esc_right", 0); break; }
-            cursor_right(line, 1);
-         } else if isEQS(esc, ESC_LEFT) {
-            if (screen_mode) {carr_inserti(line, "esc_left", 0); break; }
-            cursor_left(line, 1);
-         } else if isEQS(esc, ESC_INSERT) {
-            if (screen_mode) {carr_inserti(line, "esc_insert", 0); break; }
-         } else if isEQS(esc, ESC_SHIFT_DELETE) {
-            if (screen_mode) {carr_inserti(line, "esc_shift_delete", 0); break; }
-         } else if isEQS(esc, ESC_DELETE) {
-            if (screen_mode) {carr_inserti(line, "esc_delete", 0); break; }
-            delete_char(line);
-         } else if (isEQS(esc, ESC_HOME) || isEQS(esc, ESC_HOME2) || isEQS(esc, ESC_HOME3) || isEQS(esc, ESC_HOME4)) {
-            if (screen_mode) {
-              if isEQS(esc, ESC_HOME) {
-                 carr_inserti(line, "esc_shift_left", 0); break;
-              } else {
-                 carr_inserti(line, "esc_home", 0); break;
-              }
-            }
-            cursor_home(line);
-         } else if (isEQS(esc, ESC_END) || isEQS(esc, ESC_END2) || isEQS(esc, ESC_END3) || isEQS(esc, ESC_END4)) {
-            if (screen_mode) {
-              if isEQS(esc, ESC_END) {
-                 carr_inserti(line, "esc_shift_right", 0); break;
-              } else {
-                 carr_inserti(line, "esc_end", 0); break;
-              }
-            }
-            cursor_end(line);
-         } else if (isEQS(esc, ESC_PAGEUP) || isEQS(esc, ESC_PAGEUP2)) {
-            if (screen_mode) {carr_inserti(line, "esc_pageup", 0); break; }
-            cursor_end(line);
-         } else if (isEQS(esc, ESC_PAGEDOWN) || isEQS(esc, ESC_PAGEDOWN2)) {
-            if (screen_mode) {carr_inserti(line, "esc_pagedown", 0); break; }
-            cursor_end(line);
-         } else if isEQS(esc, ESC_PASTESTART) {
-            if (screen_mode) {
-               carr_import(line, "ins_str([====[", 0);
-               getchar_until(line, ESC_PASTESTOP);
-               carr_set_len(line, carr_len(line) - strlen(ESC_PASTESTOP) );
-               carr_import(line, "]====])",0);
-               break;
-            }
-            cursor_end(line);
-         } else if isEQS(esc, ESC_PASTESTOP) {
-            if (screen_mode) {
-               break;
-            }
-            cursor_end(line);
-         } else if isEQS(esc, ESC_MOUSEEVENT) {
-            // if (screen_mode) {carr_inserti(line, "esc_mousemove", 0); break; }
-            mouse_i = 1;
-            esc_i = 0;
-            strcpy(esc, "esc_mouse([=[" );
-            esc_i = strlen(esc);
-            in_esc = 1;
-         } else if (mouse_i==3) {
-            in_esc = 0;
-            mouse_i = 0;
-            esc_append(esc, &esc_i, ']');
-            esc_append(esc, &esc_i, '=');
-            esc_append(esc, &esc_i, ']');
-            esc_append(esc, &esc_i, ')');
-            if (screen_mode) {
-               carr_inserti(line, esc, 0);
-               // carr_inserti(line, esc, 0);
-               break;
-            }
-         } else {
-            if (mouse_i > 0) mouse_i++;
-            in_esc = 1;
-         }
-         if (!in_esc) {
+         int custom_esc_sequence = isEQ(esc_i,1) && !( isEQ(c,'[') || isEQ(c,'O') ); // OH=home, OF=end
+         if (custom_esc_sequence) {
             esc_i = 0;
             esc[0] = '\0';
+            if (use_repeat_oneline_cmd) oneline_cmd = 1;
          }
-      } else if isEQ(c,BACKSPACE) {
-         if (screen_mode) {carr_inserti(line, "esc_backspace", 0); break; }
-         backspace(line, 1);
-      } else if (isprint(c)) {
-         if (screen_mode) {
-            carr_resize(line, 0);
-            carr_import(line, "ins_str([====[", 0);
-            carr_import(line, &c, 1);
-            carr_import(line, "]====])", 0);
-            break;
+
+         if isEQ(c,ESC)  {
+            esc_i = 0;
+            esc_append(esc, &esc_i, c);
          }
-         insert_char(line, c);
-         const uint32_t hotkeys_len = isNULL(hotkeys) ? 0 : strlen(hotkeys);
-         const uint32_t hotkeys_size = hotkeys_len + 1;
-         char local_hotkeys[hotkeys_size];
-         safe_strncpy(local_hotkeys, hotkeys, hotkeys_size);
-         if isEQ(*local_hotkeys, 'a') *local_hotkeys = ' ';
-         if (is_inlist(local_hotkeys, line)) {
-            if (enable_alt_prefix) {
-               insert_prefix(line,"alt_",0);
+
+         int screen_mode = oneline_cmd ? 0 : !isNULL(hotkeys) && isEQ(*hotkeys, 'a');
+
+         if isEQ(c,'\n') {
+            if (screen_mode && !(use_repeat_oneline_cmd && repeat_oneline_cmd)) {
+               carr_inserti(line, "ins_str(\"", 9);
+               carr_inserti(line, "\\n", 2);
+               carr_inserti(line, "\")",2);
+            } else if (enable_alt_prefix && carr_len(line)>0) {
+               char ch;
+               carr_set_it(line,0);
+               carr_geti(line,&ch);
+               if (!isspace(ch) && !isdigit(ch)) {
+                  carr_inserti(line, "alt_", 0);
+               }
             }
-            if (use_repeat_oneline_cmd) {
+
+            if (use_repeat_oneline_cmd && oneline_cmd) {
                oneline_cmd = 0;
                if (!is_inlist(non_repeatables,line) && carr_len(line)>5) {
-                  // see comment above
+                  // len > 5 means longer than one char "alt_x"==5
+                  // 1-char sequences are never repeatable because the
+                  // user can just hit the key again.
                   repeat_oneline_cmd = 1;
                }
             }
             break;
          }
-      } else if (c <= 26) {
-         carr_resize(line,0);
-         c = c + 'A' - 1;
-         // if isEQ(c, 'K') {
-         //   oneline_cmd = 1;
-         // } else {
-            insert_string(line,"ctrl_",5);
-            insert_char(line, c);
-            if (use_repeat_oneline_cmd && is_inlist(repeatables,line)) {
-               repeat_oneline_cmd = 1;
-            }
-            break;
-         // }
-      } else {
-         printf("{%d, %c}", c, c);
-         fflush(stdout);
-      }
-   } // while
 
-   // raw_off(); // moved to main
-   cursor_end(line);
-   // signal(SIGINT, SIG_DFL);
+         if (use_repeat_oneline_cmd) repeat_oneline_cmd = 0;
+
+         if (esc_i) {
+            esc_append(esc, &esc_i, c);
+            int in_esc = 0;
+            if isEQS(esc,ESC_UP) {
+               if (screen_mode) {carr_inserti(line, "esc_up", 0); break; }
+               history_prev(history, line);
+            } else if isEQS(esc, ESC_DOWN) {
+               if (screen_mode) {carr_inserti(line, "esc_down", 0); break; }
+               history_next(history, line);
+            } else if isEQS(esc, ESC_RIGHT) {
+               if (screen_mode) {carr_inserti(line, "esc_right", 0); break; }
+               cursor_right(line, 1);
+            } else if isEQS(esc, ESC_LEFT) {
+               if (screen_mode) {carr_inserti(line, "esc_left", 0); break; }
+               cursor_left(line, 1);
+            } else if isEQS(esc, ESC_INSERT) {
+               if (screen_mode) {carr_inserti(line, "esc_insert", 0); break; }
+            } else if isEQS(esc, ESC_SHIFT_DELETE) {
+               if (screen_mode) {carr_inserti(line, "esc_shift_delete", 0); break; }
+            } else if isEQS(esc, ESC_DELETE) {
+               if (screen_mode) {carr_inserti(line, "esc_delete", 0); break; }
+               delete_char(line);
+            } else if (isEQS(esc, ESC_HOME) || isEQS(esc, ESC_HOME2) || isEQS(esc, ESC_HOME3) || isEQS(esc, ESC_HOME4)) {
+               if (screen_mode) {
+                 if isEQS(esc, ESC_HOME) {
+                    carr_inserti(line, "esc_shift_left", 0); break;
+                 } else {
+                    carr_inserti(line, "esc_home", 0); break;
+                 }
+               }
+               cursor_home(line);
+            } else if (isEQS(esc, ESC_END) || isEQS(esc, ESC_END2) || isEQS(esc, ESC_END3) || isEQS(esc, ESC_END4)) {
+               if (screen_mode) {
+                 if isEQS(esc, ESC_END) {
+                    carr_inserti(line, "esc_shift_right", 0); break;
+                 } else {
+                    carr_inserti(line, "esc_end", 0); break;
+                 }
+               }
+               cursor_end(line);
+            } else if (isEQS(esc, ESC_PAGEUP) || isEQS(esc, ESC_PAGEUP2)) {
+               if (screen_mode) {carr_inserti(line, "esc_pageup", 0); break; }
+               cursor_end(line);
+            } else if (isEQS(esc, ESC_PAGEDOWN) || isEQS(esc, ESC_PAGEDOWN2)) {
+               if (screen_mode) {carr_inserti(line, "esc_pagedown", 0); break; }
+               cursor_end(line);
+            } else if isEQS(esc, ESC_PASTESTART) {
+               if (screen_mode) {
+                  carr_import(line, "ins_str([====[", 0);
+                  getchar_until(line, ESC_PASTESTOP);
+                  carr_set_len(line, carr_len(line) - strlen(ESC_PASTESTOP) );
+                  carr_import(line, "]====])",0);
+                  break;
+               }
+               cursor_end(line);
+            } else if isEQS(esc, ESC_PASTESTOP) {
+               if (screen_mode) {
+                  break;
+               }
+               cursor_end(line);
+            } else if isEQS(esc, ESC_MOUSEEVENT) {
+               // if (screen_mode) {carr_inserti(line, "esc_mousemove", 0); break; }
+               mouse_i = 1;
+               esc_i = 0;
+               strcpy(esc, "esc_mouse([=[" );
+               esc_i = strlen(esc);
+               in_esc = 1;
+            } else if (mouse_i==3) {
+               in_esc = 0;
+               mouse_i = 0;
+               esc_append(esc, &esc_i, ']');
+               esc_append(esc, &esc_i, '=');
+               esc_append(esc, &esc_i, ']');
+               esc_append(esc, &esc_i, ')');
+               if (screen_mode) {
+                  carr_inserti(line, esc, 0);
+                  // carr_inserti(line, esc, 0);
+                  break;
+               }
+            } else {
+               if (mouse_i > 0) mouse_i++;
+               in_esc = 1;
+            }
+            if (!in_esc) {
+               esc_i = 0;
+               esc[0] = '\0';
+            }
+         } else if isEQ(c,BACKSPACE) {
+            if (screen_mode) {carr_inserti(line, "esc_backspace", 0); break; }
+            backspace(line, 1);
+         } else if (isprint(c)) {
+            if (screen_mode) {
+               carr_resize(line, 0);
+               carr_import(line, "ins_str([====[", 0);
+               carr_import(line, &c, 1);
+               carr_import(line, "]====])", 0);
+               break;
+            }
+            insert_char(line, c);
+            const uint32_t hotkeys_len = isNULL(hotkeys) ? 0 : strlen(hotkeys);
+            const uint32_t hotkeys_size = hotkeys_len + 1;
+            char local_hotkeys[hotkeys_size];
+            safe_strncpy(local_hotkeys, hotkeys, hotkeys_size);
+            if isEQ(*local_hotkeys, 'a') *local_hotkeys = ' ';
+            if (is_inlist(local_hotkeys, line)) {
+               if (enable_alt_prefix) {
+                  insert_prefix(line,"alt_",0);
+               }
+               if (use_repeat_oneline_cmd) {
+                  oneline_cmd = 0;
+                  if (!is_inlist(non_repeatables,line) && carr_len(line)>5) {
+                     // see comment above
+                     repeat_oneline_cmd = 1;
+                  }
+               }
+               break;
+            }
+         } else if (c <= 26) {
+            carr_resize(line,0);
+            c = c + 'A' - 1;
+            // if isEQ(c, 'K') {
+            //   oneline_cmd = 1;
+            // } else {
+               insert_string(line,"ctrl_",5);
+               insert_char(line, c);
+               if (use_repeat_oneline_cmd && is_inlist(repeatables,line)) {
+                  repeat_oneline_cmd = 1;
+               }
+               break;
+            // }
+         } else {
+            printf("{%d, %c}", c, c);
+            fflush(stdout);
+         }
+      } // while
+
+      // raw_off(); // moved to main
+      cursor_end(line);
+      // signal(SIGINT, SIG_DFL);
+   } // *******
+
 
    if isZERO(carr_len(line)) {
       if (!repeat_previous) return NULL;
