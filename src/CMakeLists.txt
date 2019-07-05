@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(carr_prj)
 
+set (CMAKE_C_FLAGS "-std=c99")
+
 add_library(carr STATIC carr_arg.c carr.c carr_readline.c carr_readline_lua.c lua_hacked.c)
 
 INSTALL(TARGETS carr DESTINATION lib)
