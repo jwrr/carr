@@ -846,7 +846,8 @@ carr_t* carr_read(const char* const filename)
    }
 
    carr->size = bufsize;
-   carr->len = !is_valid ? 0 :
+   carr->len = !is_valid    ? 0 :
+               isZERO(size) ? 0 :
                isZERO(buf[size-1]) ? size - 2 : size - 1;
    carr->max_size = 0;
    carr->arr = buf;
