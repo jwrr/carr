@@ -29,11 +29,12 @@ SOFTWARE.
 #include "carr_cis.h"
 #include "carr.h"
 
-//needed for ubuntu 16.04.
-//not needed for ubuntu 18.04, centos6.10
-extern char *strtok_r(char *, const char *, char **);
-
-//=================================================
+// =======================================================================
+// FIXME 
+// needed for ubuntu 16.04.
+// not needed for ubuntu 18.04, centos6.10
+//extern char *strtok_r(char *, const char *, char **); // FIXME UNCOMMENT
+//========================================================================
 
 //=================================================
 
