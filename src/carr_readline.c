@@ -394,7 +394,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
             // if isEQ(c, 'K') {
             //   oneline_cmd = 1;
             // } else {
-               insert_string(line,"ctrl_",5);
+               insert_string(line, "xctrl_", 6);
                insert_char(line, c);
                if (use_repeat_oneline_cmd && is_inlist(repeatables,line)) {
                   repeat_oneline_cmd = 1;
