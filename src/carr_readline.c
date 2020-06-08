@@ -245,7 +245,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
 
          if isEQ(c,'\n') {
             if (screen_mode && !(use_repeat_oneline_cmd && repeat_oneline_cmd)) {
-               carr_inserti(line, "xins_str(\"", 9);
+               carr_inserti(line, "ins_str(\"", 9);
                carr_inserti(line, "\\n", 2);
                carr_inserti(line, "\")",2);
             } else if (enable_alt_prefix && carr_len(line)>0) {
@@ -364,7 +364,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
          } else if (isprint(c)) {
             if (screen_mode) {
                carr_resize(line, 0);
-               carr_import(line, "ins_str([====[", 0);
+               carr_import(line, "xins_str([====[", 0);
                carr_import(line, &c, 1);
                carr_import(line, "]====])", 0);
                break;
