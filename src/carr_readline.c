@@ -97,7 +97,7 @@ static void insert_string(carr_t* line, char* str, uint32_t max_len) {
 
 static void insert_prefix(carr_t* line, char* str, uint32_t strlen) {
    cursor_home(line);
-   insert_string(line,"alt_",strlen);
+   insert_string(line,"xalt_",strlen);
    // insert_char(line, c);
    cursor_end(line);
 }
@@ -245,7 +245,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
 
          if isEQ(c,'\n') {
             if (screen_mode && !(use_repeat_oneline_cmd && repeat_oneline_cmd)) {
-               carr_inserti(line, "ins_str(\"", 9);
+               carr_inserti(line, "xins_str(\"", 9);
                carr_inserti(line, "\\n", 2);
                carr_inserti(line, "\")",2);
             } else if (enable_alt_prefix && carr_len(line)>0) {
@@ -253,7 +253,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
                carr_set_it(line,0);
                carr_geti(line,&ch);
                if (!isspace(ch) && !isdigit(ch)) {
-                  carr_inserti(line, "alt_", 0);
+                  carr_inserti(line, "xalt_", 0);
                }
             }
 
@@ -275,51 +275,51 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
             esc_append(esc, &esc_i, c);
             int in_esc = 0;
             if isEQS(esc,ESC_UP) {
-               if (screen_mode) {carr_inserti(line, "esc_up", 0); break; }
+               if (screen_mode) {carr_inserti(line, "xesc_up", 0); break; }
                history_prev(history, line);
             } else if isEQS(esc, ESC_DOWN) {
-               if (screen_mode) {carr_inserti(line, "esc_down", 0); break; }
+               if (screen_mode) {carr_inserti(line, "xesc_down", 0); break; }
                history_next(history, line);
             } else if isEQS(esc, ESC_RIGHT) {
-               if (screen_mode) {carr_inserti(line, "esc_right", 0); break; }
+               if (screen_mode) {carr_inserti(line, "xesc_right", 0); break; }
                cursor_right(line, 1);
             } else if isEQS(esc, ESC_LEFT) {
-               if (screen_mode) {carr_inserti(line, "esc_left", 0); break; }
+               if (screen_mode) {carr_inserti(line, "xesc_left", 0); break; }
                cursor_left(line, 1);
             } else if isEQS(esc, ESC_INSERT) {
-               if (screen_mode) {carr_inserti(line, "esc_insert", 0); break; }
+               if (screen_mode) {carr_inserti(line, "exsc_insert", 0); break; }
             } else if isEQS(esc, ESC_SHIFT_DELETE) {
-               if (screen_mode) {carr_inserti(line, "esc_shift_delete", 0); break; }
+               if (screen_mode) {carr_inserti(line, "xesc_shift_delete", 0); break; }
             } else if isEQS(esc, ESC_DELETE) {
-               if (screen_mode) {carr_inserti(line, "esc_delete", 0); break; }
+               if (screen_mode) {carr_inserti(line, "xesc_delete", 0); break; }
                delete_char(line);
             } else if (isEQS(esc, ESC_HOME) || isEQS(esc, ESC_HOME2) || isEQS(esc, ESC_HOME3) || isEQS(esc, ESC_HOME4)) {
                if (screen_mode) {
                  if isEQS(esc, ESC_HOME) {
-                    carr_inserti(line, "esc_shift_left", 0); break;
+                    carr_inserti(line, "xesc_shift_left", 0); break;
                  } else {
-                    carr_inserti(line, "esc_home", 0); break;
+                    carr_inserti(line, "xesc_home", 0); break;
                  }
                }
                cursor_home(line);
             } else if (isEQS(esc, ESC_END) || isEQS(esc, ESC_END2) || isEQS(esc, ESC_END3) || isEQS(esc, ESC_END4)) {
                if (screen_mode) {
                  if isEQS(esc, ESC_END) {
-                    carr_inserti(line, "esc_shift_right", 0); break;
+                    carr_inserti(line, "xesc_shift_right", 0); break;
                  } else {
-                    carr_inserti(line, "esc_end", 0); break;
+                    carr_inserti(line, "xesc_end", 0); break;
                  }
                }
                cursor_end(line);
             } else if (isEQS(esc, ESC_PAGEUP) || isEQS(esc, ESC_PAGEUP2)) {
-               if (screen_mode) {carr_inserti(line, "esc_pageup", 0); break; }
+               if (screen_mode) {carr_inserti(line, "xesc_pageup", 0); break; }
                cursor_end(line);
             } else if (isEQS(esc, ESC_PAGEDOWN) || isEQS(esc, ESC_PAGEDOWN2)) {
-               if (screen_mode) {carr_inserti(line, "esc_pagedown", 0); break; }
+               if (screen_mode) {carr_inserti(line, "xesc_pagedown", 0); break; }
                cursor_end(line);
             } else if isEQS(esc, ESC_PASTESTART) {
                if (screen_mode) {
-                  carr_import(line, "ins_str([====[", 0);
+                  carr_import(line, "xins_str([====[", 0);
                   getchar_until(line, ESC_PASTESTOP);
                   carr_set_len(line, carr_len(line) - strlen(ESC_PASTESTOP) );
                   carr_import(line, "]====])",0);
@@ -332,10 +332,10 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
                }
                cursor_end(line);
             } else if isEQS(esc, ESC_MOUSEEVENT) {
-               // if (screen_mode) {carr_inserti(line, "esc_mousemove", 0); break; }
+               // if (screen_mode) {carr_inserti(line, "xesc_mousemove", 0); break; }
                mouse_i = 1;
                esc_i = 0;
-               strcpy(esc, "esc_mouse([=[" );
+               strcpy(esc, "xesc_mouse([=[" );
                esc_i = strlen(esc);
                in_esc = 1;
             } else if (mouse_i==3) {
@@ -359,7 +359,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
                esc[0] = '\0';
             }
          } else if isEQ(c,BACKSPACE) {
-            if (screen_mode) {carr_inserti(line, "esc_backspace", 0); break; }
+            if (screen_mode) {carr_inserti(line, "xesc_backspace", 0); break; }
             backspace(line, 1);
          } else if (isprint(c)) {
             if (screen_mode) {
@@ -377,7 +377,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
             if isEQ(*local_hotkeys, 'a') *local_hotkeys = ' ';
             if (is_inlist(local_hotkeys, line)) {
                if (enable_alt_prefix) {
-                  insert_prefix(line,"alt_",0);
+                  insert_prefix(line,"xalt_",0);
                }
                if (use_repeat_oneline_cmd) {
                   oneline_cmd = 0;
@@ -421,7 +421,7 @@ carr_t* carr_readline(const char* prompt, int repeat_previous, carr_t* history,
       }
 //      if (enable_alt_prefix) {
 //         carr_set_it(line,0);
-//         carr_inserti(line, "alt_", 0);
+//         carr_inserti(line, "xalt_", 0);
 //      }
    } else {
       carr_t* tail = NULL;
